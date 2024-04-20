@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: application-ingress
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+    - http:
+        paths:
+          - path: /service-a
+            backend:
+              service:
+                name: service-a
+                port:
+                  number: 80
+            pathType: Prefix
+          - path: /service-b
+            backend:
+              service:
+                name: service-b
+                port:
+                  number: 80
+            pathType: Prefix

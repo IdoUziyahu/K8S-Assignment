@@ -1,0 +1,19 @@
+# REGISTRY: idoassignment202404acr.azurecr.io
+# IMAGE NAME: service-b
+
+FROM node:14
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+ENV APP_PREFIX="/service-b"
+ENV PORT=8080
+
+EXPOSE 8080
+
+CMD ["npm", "start"]
