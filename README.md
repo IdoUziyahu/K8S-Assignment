@@ -1,19 +1,23 @@
 # K8S-Assignment
 
-in this repo you can find:
+The content of the repo:
 
 ### /K8S
 
-a folder with all the YAML files used for the project. which all configure the services, deployments, ingress and network policy
+A folder with all the YAML files used for the project. Which all configure the services, deployments, ingress and network policy
 
-### service A
+### /service-a
 
-an application that print the Bitcoin value in USD every minute, and every 10 minutes it prints the average of the last 10 minutes
+The source code to service A. An application that print the Bitcoin value in USD every minute, and every 10 minutes it prints the average of the last 10 minutes.
 
-### service B
+### /service-b
 
-an api call that return "Hello Microsoft!"
+The source code to service B. An api call that return "Hello Microsoft!"
 
 <p style="color:red">
-* every service has it own dockerfile, they have pushed to the ACR container registry by the image name that have been commented to each file at the top. and the Kubernetes deployment files are pulling the images from this registry.
+* Every service has it own dockerfile, they have pushed to the ACR container registry by the image name that have been commented to each file at the top. The Kubernetes deployment files are pulling the images from this registry.
 </p>
+
+### /templates
+
+The azure template files of the project. Includes template to the entire resouce group and only for AKS.
