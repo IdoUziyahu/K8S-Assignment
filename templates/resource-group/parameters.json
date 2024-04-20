@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedClusters_k8sAssignment_name": {
+      "value": null
+    },
+    "registries_idoassignment202404acr_name": {
+      "value": null
+    },
+    "dataCollectionRules_MSCI_eastus_k8sAssignment_name": {
+      "value": null
+    },
+    "publicIPAddresses_da720656_085b_4f4b_b4d8_7809307f28ce_externalid": {
+      "value": null
+    },
+    "userAssignedIdentities_k8sAssignment_agentpool_externalid": {
+      "value": null
+    },
+    "workspaces_DefaultWorkspace_7b802981_34fb_4e26_a917_70334cd106e2_EUS_externalid": {
+      "value": null
+    }
+  }
+}

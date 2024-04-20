@@ -1,0 +1,381 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "managedClusters_k8sAssignment_name": {
+      "defaultValue": "k8sAssignment",
+      "type": "String"
+    },
+    "registries_idoassignment202404acr_name": {
+      "defaultValue": "idoassignment202404acr",
+      "type": "String"
+    },
+    "dataCollectionRules_MSCI_eastus_k8sAssignment_name": {
+      "defaultValue": "MSCI-eastus-k8sAssignment",
+      "type": "String"
+    },
+    "publicIPAddresses_da720656_085b_4f4b_b4d8_7809307f28ce_externalid": {
+      "defaultValue": "/subscriptions/7b802981-34fb-4e26-a917-70334cd106e2/resourceGroups/MC_MSAssignment202404_k8sAssignment_eastus/providers/Microsoft.Network/publicIPAddresses/da720656-085b-4f4b-b4d8-7809307f28ce",
+      "type": "String"
+    },
+    "userAssignedIdentities_k8sAssignment_agentpool_externalid": {
+      "defaultValue": "/subscriptions/7b802981-34fb-4e26-a917-70334cd106e2/resourceGroups/MC_MSAssignment202404_k8sAssignment_eastus/providers/Microsoft.ManagedIdentity/userAssignedIdentities/k8sAssignment-agentpool",
+      "type": "String"
+    },
+    "workspaces_DefaultWorkspace_7b802981_34fb_4e26_a917_70334cd106e2_EUS_externalid": {
+      "defaultValue": "/subscriptions/7b802981-34fb-4e26-a917-70334cd106e2/resourceGroups/DefaultResourceGroup-EUS/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-7b802981-34fb-4e26-a917-70334cd106e2-EUS",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[parameters('registries_idoassignment202404acr_name')]",
+      "location": "eastus",
+      "sku": {
+        "name": "Basic",
+        "tier": "Basic"
+      },
+      "properties": {
+        "adminUserEnabled": true,
+        "policies": {
+          "quarantinePolicy": {
+            "status": "disabled"
+          },
+          "trustPolicy": {
+            "type": "Notary",
+            "status": "disabled"
+          },
+          "retentionPolicy": {
+            "days": 7,
+            "status": "disabled"
+          },
+          "exportPolicy": {
+            "status": "enabled"
+          },
+          "azureADAuthenticationAsArmPolicy": {
+            "status": "enabled"
+          },
+          "softDeletePolicy": {
+            "retentionDays": 7,
+            "status": "disabled"
+          }
+        },
+        "encryption": {
+          "status": "disabled"
+        },
+        "dataEndpointEnabled": false,
+        "publicNetworkAccess": "Enabled",
+        "networkRuleBypassOptions": "AzureServices",
+        "zoneRedundancy": "Disabled",
+        "anonymousPullEnabled": false,
+        "metadataSearch": "Disabled"
+      }
+    },
+    {
+      "type": "Microsoft.ContainerService/managedClusters",
+      "apiVersion": "2024-01-02-preview",
+      "name": "[parameters('managedClusters_k8sAssignment_name')]",
+      "location": "eastus",
+      "sku": {
+        "name": "Base",
+        "tier": "Free"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "kubernetesVersion": "1.28.5",
+        "dnsPrefix": "[concat(parameters('managedClusters_k8sAssignment_name'), '-dns')]",
+        "agentPoolProfiles": [
+          {
+            "name": "agentpool",
+            "count": 2,
+            "vmSize": "Standard_DS2_v2",
+            "osDiskSizeGB": 128,
+            "osDiskType": "Managed",
+            "kubeletDiskType": "OS",
+            "maxPods": 110,
+            "type": "VirtualMachineScaleSets",
+            "maxCount": 5,
+            "minCount": 2,
+            "enableAutoScaling": true,
+            "powerState": {
+              "code": "Running"
+            },
+            "orchestratorVersion": "1.28.5",
+            "enableNodePublicIP": false,
+            "mode": "System",
+            "osType": "Linux",
+            "osSKU": "Ubuntu",
+            "upgradeSettings": {
+              "maxSurge": "10%"
+            },
+            "enableFIPS": false,
+            "securityProfile": {
+              "sshAccess": "LocalUser"
+            }
+          }
+        ],
+        "windowsProfile": {
+          "adminUsername": "azureuser",
+          "enableCSIProxy": true
+        },
+        "servicePrincipalProfile": {
+          "clientId": "msi"
+        },
+        "addonProfiles": {
+          "azureKeyvaultSecretsProvider": {
+            "enabled": true,
+            "config": {
+              "enableSecretRotation": "true"
+            }
+          },
+          "azurepolicy": {
+            "enabled": true
+          }
+        },
+        "nodeResourceGroup": "[concat('MC_MSAssignment202404_', parameters('managedClusters_k8sAssignment_name'), '_eastus')]",
+        "enableRBAC": true,
+        "supportPlan": "KubernetesOfficial",
+        "networkProfile": {
+          "networkPlugin": "azure",
+          "networkPolicy": "azure",
+          "networkDataplane": "azure",
+          "loadBalancerSku": "Standard",
+          "loadBalancerProfile": {
+            "managedOutboundIPs": {
+              "count": 1
+            },
+            "effectiveOutboundIPs": [
+              {
+                "id": "[parameters('publicIPAddresses_da720656_085b_4f4b_b4d8_7809307f28ce_externalid')]"
+              }
+            ],
+            "backendPoolType": "nodeIPConfiguration"
+          },
+          "serviceCidr": "10.0.0.0/16",
+          "dnsServiceIP": "10.0.0.10",
+          "outboundType": "loadBalancer",
+          "serviceCidrs": ["10.0.0.0/16"],
+          "ipFamilies": ["IPv4"]
+        },
+        "identityProfile": {
+          "kubeletidentity": {
+            "resourceId": "[parameters('userAssignedIdentities_k8sAssignment_agentpool_externalid')]",
+            "clientId": "423f39bb-df87-499f-a271-dacbfeace82d",
+            "objectId": "db5717e8-bac4-42be-85fb-f8c172a2d85f"
+          }
+        },
+        "autoScalerProfile": {
+          "balance-similar-node-groups": "false",
+          "daemonset-eviction-for-empty-nodes": false,
+          "daemonset-eviction-for-occupied-nodes": true,
+          "expander": "random",
+          "ignore-daemonsets-utilization": false,
+          "max-empty-bulk-delete": "10",
+          "max-graceful-termination-sec": "600",
+          "max-node-provision-time": "15m",
+          "max-total-unready-percentage": "45",
+          "new-pod-scale-up-delay": "0s",
+          "ok-total-unready-count": "3",
+          "scale-down-delay-after-add": "10m",
+          "scale-down-delay-after-delete": "10s",
+          "scale-down-delay-after-failure": "3m",
+          "scale-down-unneeded-time": "10m",
+          "scale-down-unready-time": "20m",
+          "scale-down-utilization-threshold": "0.5",
+          "scan-interval": "10s",
+          "skip-nodes-with-local-storage": "false",
+          "skip-nodes-with-system-pods": "true"
+        },
+        "autoUpgradeProfile": {
+          "upgradeChannel": "patch",
+          "nodeOSUpgradeChannel": "NodeImage"
+        },
+        "disableLocalAccounts": false,
+        "securityProfile": {},
+        "storageProfile": {
+          "diskCSIDriver": {
+            "enabled": true,
+            "version": "v1"
+          },
+          "fileCSIDriver": {
+            "enabled": true
+          },
+          "snapshotController": {
+            "enabled": true
+          }
+        },
+        "oidcIssuerProfile": {
+          "enabled": false
+        },
+        "ingressProfile": {
+          "webAppRouting": {
+            "enabled": true
+          }
+        },
+        "workloadAutoScalerProfile": {},
+        "metricsProfile": {
+          "costAnalysis": {
+            "enabled": false
+          }
+        },
+        "nodeProvisioningProfile": {
+          "mode": "Manual"
+        },
+        "bootstrapProfile": {
+          "artifactSource": "Direct"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2022-06-01",
+      "name": "[parameters('dataCollectionRules_MSCI_eastus_k8sAssignment_name')]",
+      "location": "eastus",
+      "kind": "Linux",
+      "properties": {
+        "dataSources": {
+          "syslog": [],
+          "extensions": [
+            {
+              "streams": ["Microsoft-ContainerInsights-Group-Default"],
+              "extensionName": "ContainerInsights",
+              "extensionSettings": {},
+              "name": "ContainerInsightsExtension"
+            }
+          ]
+        },
+        "destinations": {
+          "logAnalytics": [
+            {
+              "workspaceResourceId": "[parameters('workspaces_DefaultWorkspace_7b802981_34fb_4e26_a917_70334cd106e2_EUS_externalid')]",
+              "name": "ciworkspace"
+            }
+          ]
+        },
+        "dataFlows": [
+          {
+            "streams": ["Microsoft-ContainerInsights-Group-Default"],
+            "destinations": ["ciworkspace"]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[concat(parameters('registries_idoassignment202404acr_name'), '/_repositories_admin')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registries_idoassignment202404acr_name'))]"
+      ],
+      "properties": {
+        "description": "Can perform all read, write and delete operations on the registry",
+        "actions": [
+          "repositories/*/metadata/read",
+          "repositories/*/metadata/write",
+          "repositories/*/content/read",
+          "repositories/*/content/write",
+          "repositories/*/content/delete"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[concat(parameters('registries_idoassignment202404acr_name'), '/_repositories_pull')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registries_idoassignment202404acr_name'))]"
+      ],
+      "properties": {
+        "description": "Can pull any repository of the registry",
+        "actions": ["repositories/*/content/read"]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[concat(parameters('registries_idoassignment202404acr_name'), '/_repositories_pull_metadata_read')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registries_idoassignment202404acr_name'))]"
+      ],
+      "properties": {
+        "description": "Can perform all read operations on the registry",
+        "actions": [
+          "repositories/*/content/read",
+          "repositories/*/metadata/read"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[concat(parameters('registries_idoassignment202404acr_name'), '/_repositories_push')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registries_idoassignment202404acr_name'))]"
+      ],
+      "properties": {
+        "description": "Can push to any repository of the registry",
+        "actions": [
+          "repositories/*/content/read",
+          "repositories/*/content/write"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+      "apiVersion": "2023-11-01-preview",
+      "name": "[concat(parameters('registries_idoassignment202404acr_name'), '/_repositories_push_metadata_write')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registries_idoassignment202404acr_name'))]"
+      ],
+      "properties": {
+        "description": "Can perform all read and write operations on the registry",
+        "actions": [
+          "repositories/*/metadata/read",
+          "repositories/*/metadata/write",
+          "repositories/*/content/read",
+          "repositories/*/content/write"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "apiVersion": "2024-01-02-preview",
+      "name": "[concat(parameters('managedClusters_k8sAssignment_name'), '/agentpool')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerService/managedClusters', parameters('managedClusters_k8sAssignment_name'))]"
+      ],
+      "properties": {
+        "count": 2,
+        "vmSize": "Standard_DS2_v2",
+        "osDiskSizeGB": 128,
+        "osDiskType": "Managed",
+        "kubeletDiskType": "OS",
+        "maxPods": 110,
+        "type": "VirtualMachineScaleSets",
+        "maxCount": 5,
+        "minCount": 2,
+        "enableAutoScaling": true,
+        "powerState": {
+          "code": "Running"
+        },
+        "orchestratorVersion": "1.28.5",
+        "enableNodePublicIP": false,
+        "mode": "System",
+        "osType": "Linux",
+        "osSKU": "Ubuntu",
+        "upgradeSettings": {
+          "maxSurge": "10%"
+        },
+        "enableFIPS": false,
+        "securityProfile": {
+          "sshAccess": "LocalUser"
+        }
+      }
+    }
+  ]
+}
