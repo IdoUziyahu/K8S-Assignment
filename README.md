@@ -21,3 +21,11 @@ The source code to service B. An api call that return "Hello Microsoft!"
 ### /templates
 
 The azure template files of the project. Includes template to the entire resouce group and only for AKS.
+
+---
+
+the ingress with the services is exposed in ip 20.185.208.237, use [20.185.208.237/service-a](http://20.185.208.237/service-a) and [20.185.208.237/service-b](http://20.185.208.237/service-b) to see the servises live.
+
+#### thanks for reading!
+
+Ido uziyahu.
